@@ -207,6 +207,7 @@ rather than under a `src/` directory, and the data directories beside them:
 
     adapters/    one package per engine, each importing exactly one engine
     cases/       case definitions, as data
+    harness/     the tests that need an engine, a device or hours
     metrics/     the metric estimators
     reference/   the reference integration
     report/      the report card assembly
@@ -214,6 +215,10 @@ rather than under a `src/` directory, and the data directories beside them:
     runner/      case plus engine plus configuration to a result record
     tests/       the suite that runs anywhere
     docs/        documents, including this one
+
+`harness/` is the one directory here that no issue's Scope line named. It was
+added by issue #22, which is where the two sets of tests and the naming rule
+that separates them are argued.
 
 The reason for a flat layout rather than `src/` is that four of those directories
 are data a reader should be able to find, cite and reuse without installing
