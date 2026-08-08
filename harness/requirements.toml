@@ -1,0 +1,24 @@
+# The one place a harness requirement is declared. A harness directory name is a
+# sorted, hyphen-joined list of ids from this file, so what a harness needs is
+# evident from its name alone and not from a comment inside it.
+#
+# `permits` is the extra top-level module names a harness carrying this
+# requirement may import. Anything a harness imports that is neither in the
+# standard library, nor part of the suite that needs nothing, nor permitted by
+# one of its own requirements, is a requirement it acquired without declaring,
+# and tests/test_two_test_sets.py refuses it.
+#
+# Adding an id here is the deliberate act. A harness cannot invent one, because
+# a name that does not decompose into ids from this file is refused.
+
+[engine]
+description = "an installed physics engine, reached through its adapter package"
+permits = ["adapters"]
+
+[gpu]
+description = "a graphics device an engine can offload a solve to, where the number would otherwise mean nothing on a shared runner"
+permits = []
+
+[hours]
+description = "a run measured in hours, too long for the suite a contributor runs before pushing"
+permits = []
