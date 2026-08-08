@@ -28,4 +28,7 @@ The interpreter floor is CPython 3.12, and the reason it is there is in
 Nothing is pinned yet, which is issue #19, so today the command runs on whatever
 interpreter is on the path.
 
-See [NOTICE.md](NOTICE.md) for the intended-use notice.
+See [NOTICE.md](NOTICE.md) for the intended-use notice, and
+[docs/what-this-is-not-for.md](docs/what-this-is-not-for.md) for what a number
+from this suite does and does not support. It is worth reading before quoting
+one: there is no ranking here and no overall winner, by design.
