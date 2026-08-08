@@ -127,6 +127,71 @@ class TheReport(unittest.TestCase):
         self.assertEqual(printed.count(gate.PASSED), 2)
 
 
+class APartThatCollectedTooLittle(unittest.TestCase):
+    """A runner that finds nothing exits zero, and that green looks real.
+
+    The floor is what makes it not look real. These tests are what stops the
+    floor from being decoration.
+    """
+
+    def counting_part(self, prints: str, floor: int) -> gate.Part:
+        return gate.Part(
+            name="counted",
+            what="a fixture part that reports a count",
+            command=(sys.executable, "-c", f"print({prints!r})"),
+            counts="tests",
+            count_pattern=gate.UNITTEST_COUNT,
+            floor=floor,
+        )
+
+    def test_a_count_below_the_floor_fails(self) -> None:
+        part = self.counting_part("Ran 0 tests in 0.000s", floor=1)
+        results = gate.run([part], REPO_ROOT)
+        self.assertEqual(results[0].outcome, gate.COLLECTED_NOTHING)
+        self.assertTrue(any(r.outcome in gate.FAILING for r in results))
+
+    def test_the_failure_carries_the_count(self) -> None:
+        part = self.counting_part("Ran 3 tests in 0.000s", floor=40)
+        results = gate.run([part], REPO_ROOT)
+        self.assertEqual(results[0].detail, "collected 3 tests, and the floor is 40")
+        self.assertEqual(results[0].count, 3)
+
+    def test_a_count_at_the_floor_passes(self) -> None:
+        # The near-miss, and an off-by-one here would be the whole defect.
+        part = self.counting_part("Ran 40 tests in 0.000s", floor=40)
+        self.assertEqual(gate.run([part], REPO_ROOT)[0].outcome, gate.PASSED)
+
+    def test_no_count_at_all_is_not_treated_as_fine(self) -> None:
+        # A part that exits 0 and says nothing about what it collected has told
+        # this gate nothing. Reading that as a pass is the same mistake as
+        # reading a skip as a pass.
+        part = self.counting_part("nothing to report", floor=1)
+        results = gate.run([part], REPO_ROOT)
+        self.assertEqual(results[0].outcome, gate.COLLECTED_NOTHING)
+        self.assertIn("reported no count", results[0].detail)
+
+    def test_the_count_is_printed_when_the_part_passes(self) -> None:
+        # A reader has to see what was covered, not infer it from the absence
+        # of failures.
+        out = io.StringIO()
+        part = self.counting_part("Ran 41 tests in 0.000s", floor=40)
+        gate.report(gate.run([part], REPO_ROOT), out)
+        self.assertIn("41 tests, floor 40", out.getvalue())
+
+    def test_the_output_of_a_part_that_failed_is_printed_in_full(self) -> None:
+        out = io.StringIO()
+        part = self.counting_part("Ran 1 tests in 0.000s", floor=40)
+        gate.report(gate.run([part], REPO_ROOT), out)
+        self.assertIn("Ran 1 tests in 0.000s", out.getvalue())
+
+    def test_the_suite_part_declares_a_floor_above_zero(self) -> None:
+        # Without this, the floor mechanism is present and the one part that
+        # collects opts out of it.
+        suite = [p for p in gate.build_parts(REPO_ROOT) if p.name == "suite"][0]
+        self.assertIsNotNone(suite.floor)
+        self.assertGreater(suite.floor, 0)
+
+
 class WhichPartsRunIsDerivedFromTheTree(unittest.TestCase):
     """A skip written by hand goes stale in silence. These do not."""
 

@@ -16,7 +16,8 @@ It runs its parts in order, stops at the first failure, and prints every part
 with its outcome. A part that did not run says why and what asking for it would
 cost, so a run that covered less than everything cannot be read as one that
 covered everything and found nothing. A part that could not start is a failure
-rather than a skip.
+rather than a skip, and a part that collected fewer items than its declared
+floor is a failure with the count in the message.
 
 It needs no engine installed and no display. Which parts run is derived from the
 tree, so the formatting part starts running on the day a formatter configuration
