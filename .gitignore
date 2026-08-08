@@ -1,0 +1,5 @@
+# Interpreter and tooling artefacts. Nothing generated is tracked: a generated
+# file in the tree is a file a reader cannot tell from a written one.
+__pycache__/
+*.py[cod]
+.venv/
