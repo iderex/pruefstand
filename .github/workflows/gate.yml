@@ -1,0 +1,48 @@
+# The gate. This workflow is a wrapper around `python -m gate` and carries no
+# logic of its own: two procedures meant to be one procedure drift, and the
+# drift is found by a merge that was green on a laptop and reds here. The rule
+# is refused by tests/test_gate_workflow.py, which allows this file exactly one
+# shell line and requires it to be the gate command.
+#
+# The interpreter is set to the floor version fixed in
+# docs/decisions/language-and-toolchain.md rather than to whatever the runner
+# image happens to carry, so a failure here is a failure of the tree and not of
+# the image.
+name: gate
+
+on:
+  pull_request:
+    branches: ["**"]
+  push:
+    branches: [main]
+
+# Deny by default; the job grants only what checkout needs.
+permissions: {}
+
+# A newer push on the same ref supersedes an in-flight run. The gate publishes
+# nothing, so cancelling a superseded run is safe.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  gate:
+    name: gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # No step pushes, so do not leave the token in .git/config.
+          persist-credentials: false
+
+      - name: Set up the interpreter at the floor version
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12"
+
+      - name: Run the gate
+        run: python -m gate
