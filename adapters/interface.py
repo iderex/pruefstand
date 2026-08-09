@@ -113,6 +113,34 @@ KIND_WITHOUT_GIVEN = NOT_READ_BACK
 # vocabulary exists to make visible.
 KIND_WITH_ADMISSION = SUBSTITUTION
 
+# What a departure says about the number the run produced. Issue #37: an entry
+# naming the property and the substitution and saying nothing about the
+# measurement is a complete-looking list in which nothing says whether the number
+# moved, and the report card then shows a departure beside a number with no way to
+# tell whether the two are related.
+#
+# The third value is why this is a vocabulary of three rather than a boolean. An
+# adapter author who does not know is the case a boolean cannot carry, and forcing
+# a guess into one of the other two would publish a judgement nobody made. It is
+# the same shape `reference.answer.Unbounded` takes for a bound that could not be
+# produced, for the same reason: an honest absence beats a field filled to look
+# complete.
+MOVES_THE_MEASUREMENT = "moves-the-measurement"
+LEAVES_THE_MEASUREMENT = "leaves-the-measurement"
+EFFECT_NOT_KNOWN = "not-known"
+
+EXPECTED_EFFECTS = (
+    MOVES_THE_MEASUREMENT,
+    LEAVES_THE_MEASUREMENT,
+    EFFECT_NOT_KNOWN,
+)
+
+# The one kind whose expected effect is absent rather than unknown. A quantity the
+# engine never read back is a quantity nothing was substituted for, so there is no
+# effect on the measurement to state and `not-known` there would report an open
+# question where there is none.
+KIND_WITHOUT_EXPECTED_EFFECT = NOT_READ_BACK
+
 # What may admit a configuration deviation, from the configuration procedure,
 # which gives this field no free-text option: the case declared the deviation, or
 # the engine refused the procedure's value and reported what it took instead.
@@ -248,6 +276,13 @@ class Departure:
     `not-read-back`. `admitted_by` names the case's own admission and is present
     exactly for `substitution`.
 
+    `why` is why the departure was made. `expected_effect` is a different
+    statement and issue #37 is where it comes from: whether the measured quantity
+    is expected to move because of it, from `EXPECTED_EFFECTS`, absent exactly for
+    `not-read-back`. It is a judgement, and it belongs to whoever wrote the
+    adapter rather than to whoever reads the report card afterwards, because by
+    then the engine's own behaviour is no longer in front of anybody.
+
     A record whose departure list is empty asserts that the engine holds exactly
     what the case said on every quantity the case set. That is a strong claim and
     it is the one this project wants to be able to make, which is why an empty
@@ -260,6 +295,7 @@ class Departure:
     given: str | None
     why: str
     admitted_by: str | None
+    expected_effect: str | None
 
 
 @dataclass(frozen=True)
