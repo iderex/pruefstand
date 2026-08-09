@@ -117,7 +117,13 @@ project's code, which is the arrangement every one of these libraries expects an
 is not something this project can change. What reduces the exposure is that the
 suite that runs anywhere needs no engine at all, which is already true and is what
 the gate reports when it says the engine part did not run. Headless execution is
-#21 and refusing the network in the suite is #23, and neither is built.
+#21 and is not built. The network is refused, in `no_network.py`, as a property of
+the process that runs the tests rather than as a rule somebody follows, and its
+reach is stated where it is implemented: it covers connection and name resolution
+through the socket module, and it does not reach a child process or a call that
+leaves by another route. What an engine fetches on first use is therefore a
+register in `tests/test_no_network.py` that reds when an adapter lands without an
+entry, rather than something this refusal observes.
 
 **The repository itself.** The ruleset refuses a direct push and a force-push to
 the mainline and requires a pull request, with no bypass actors. It requires no
