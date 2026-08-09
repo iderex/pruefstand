@@ -28,11 +28,19 @@ the free rotation of a symmetric body against its elementary closed form, the tw
 momentum maps a heavy symmetric top has, and an energy band that does not walk and
 shrinks with the square of the step.
 
+`convergence.py` is the refinement study that says what order `integrator.py`
+reaches, and [the order this reference reaches](order-of-convergence.md) is what
+it measured: two, from a step of 2.5e-1 down to 4.9e-6, with the rounding floor
+and both ends of the usable range recorded rather than assumed. The gate
+runs the same two ladders at a reduced sampling in `tests/test_convergence.py`, so
+a change costing the reference an order reds instead of surfacing later as a
+number that looked odd.
+
 The rest of the computation does not exist yet. The closed forms are #44 and #45,
-the measured order of convergence is #46, the independent error bound is #47 and
-the non-holonomic reference is #48. `integrator.py` carries one precision,
-binary64, and the higher-precision run the design note anticipates for the bound is
-#47's to weigh rather than something built here.
+the independent error bound is #47 and the non-holonomic reference is #48.
+`integrator.py` carries one precision, binary64, and the higher-precision run the
+design note anticipates for the bound is #47's to weigh rather than something
+built here.
 
 Part of the numerical core, so it imports no adapter and no engine. That is the
 property this directory exists for. A reference that imported an engine would
