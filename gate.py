@@ -67,12 +67,22 @@ UNITTEST_COUNT = re.compile(r"^Ran (?P<count>\d+) tests? in ", re.MULTILINE)
 # message what was removed and why. Measured at the commit this floor landed in:
 #
 #     python -m unittest discover -s tests 2>&1 | grep -E '^Ran '
-#     Ran 84 tests in 1.514s
+#     Ran 352 tests in 16.324s
 #
 # The gap between the floor and the count is deliberate and small. A floor equal
 # to the count reds on every removal including a deliberate one, which trains a
 # reader to lower it without thinking; a floor at zero refuses nothing.
-SUITE_FLOOR = 80
+#
+# Raising it is not housekeeping, and the number it replaced is why. The floor
+# stood at 80 against a count of 84 when it landed and was never moved again, so
+# by the time the suite reached 352 it would have passed a run that had lost
+# three quarters of itself. A floor that stops tracking the suite becomes a floor
+# at zero slowly, and the shape it exists to refuse is exactly a green that
+# covered a fraction of what a reader takes it to cover.
+# `TheSuiteFloorTracksTheSuite` in `tests/test_gate.py` now refuses a floor that
+# has fallen more than a tenth behind, so it drifts by a stated amount rather
+# than indefinitely.
+SUITE_FLOOR = 335
 
 
 @dataclass(frozen=True)
