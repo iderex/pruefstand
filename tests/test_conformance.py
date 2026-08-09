@@ -260,6 +260,7 @@ class ClampedStepDeclared(TimeThatDoesNotMove):
                 given="0.0",
                 why="this fixture engine advances nothing",
                 admitted_by=None,
+                expected_effect=interface.MOVES_THE_MEASUREMENT,
             ),
         )
 
@@ -308,6 +309,7 @@ class UnadmittedSubstitution(Conforming):
                 given="a friction cone",
                 why="the engine has no frictionless option",
                 admitted_by=None,
+                expected_effect=interface.MOVES_THE_MEASUREMENT,
             ),
         )
 
@@ -322,6 +324,83 @@ class ReadBackClaimedForSomethingUnread(Conforming):
                 given="the case's tensor",
                 why="the engine exposes no read-back",
                 admitted_by=None,
+                expected_effect=None,
+            ),
+        )
+
+
+class DepartureSayingNothingAboutTheMeasurement(Conforming):
+    """A departure list that looks complete and answers #37's question with nothing.
+
+    Every other field is filled in and correct. What is missing is the one field
+    that says whether the number the run produced is expected to have moved, which
+    is what makes a departure something a reader can act on rather than a note.
+    """
+
+    def departures(self) -> tuple[interface.Departure, ...]:
+        return (
+            interface.Departure(
+                kind=interface.CLAMPED,
+                field="timestep",
+                asked="0.001",
+                given="0.0",
+                why="this fixture engine advances nothing",
+                admitted_by=None,
+                expected_effect=None,
+            ),
+        )
+
+
+class DepartureWithAnEffectOutsideTheVocabulary(Conforming):
+    def departures(self) -> tuple[interface.Departure, ...]:
+        return (
+            interface.Departure(
+                kind=interface.CLAMPED,
+                field="timestep",
+                asked="0.001",
+                given="0.0",
+                why="this fixture engine advances nothing",
+                admitted_by=None,
+                expected_effect="probably fine",
+            ),
+        )
+
+
+class UnreadQuantityWithAnEffectStated(Conforming):
+    """The other direction: a judgement about a value the engine never reported."""
+
+    def departures(self) -> tuple[interface.Departure, ...]:
+        return (
+            interface.Departure(
+                kind=interface.NOT_READ_BACK,
+                field="body.probe.inertia",
+                asked="the case's tensor",
+                given=None,
+                why="the engine exposes no read-back",
+                admitted_by=None,
+                expected_effect=interface.LEAVES_THE_MEASUREMENT,
+            ),
+        )
+
+
+class EffectNotKnownDeclared(TimeThatDoesNotMove):
+    """An adapter author who cannot judge the effect and says so. This has to pass.
+
+    The near-miss for the whole field. If the vocabulary refused this, an author
+    who does not know would have to choose one of the other two, and the record
+    would then carry a judgement nobody made rather than an open question.
+    """
+
+    def departures(self) -> tuple[interface.Departure, ...]:
+        return (
+            interface.Departure(
+                kind=interface.CLAMPED,
+                field="timestep",
+                asked="0.001",
+                given="0.0",
+                why="this fixture engine advances nothing",
+                admitted_by=None,
+                expected_effect=interface.EFFECT_NOT_KNOWN,
             ),
         )
 
@@ -605,6 +684,38 @@ class TheDepartureCheckBites(unittest.TestCase):
         # The negative disclosure turning into a positive one, in one field.
         found = violations(ReadBackClaimedForSomethingUnread)
         self.assertTrue(any("read back and agreed" in s for s in found), found)
+
+    def test_a_departure_saying_nothing_about_the_measurement_is_refused(
+        self,
+    ) -> None:
+        # #37's second done-when. Without this the list can be complete in every
+        # field a reader checks and still leave the one question the report card
+        # needs answered.
+        found = violations(DepartureSayingNothingAboutTheMeasurement)
+        self.assertTrue(
+            any("expected effect None on the measurement" in s for s in found), found
+        )
+
+    def test_an_effect_outside_the_vocabulary_is_refused(self) -> None:
+        found = violations(DepartureWithAnEffectOutsideTheVocabulary)
+        self.assertTrue(
+            any("'probably fine'" in s for s in found), found
+        )
+
+    def test_an_effect_stated_for_a_quantity_nobody_read_is_refused(self) -> None:
+        # The other direction, and the one that would read as knowledge. Nothing
+        # was substituted for a quantity the engine never reported, so there is
+        # no effect on the measurement to state.
+        found = violations(UnreadQuantityWithAnEffectStated)
+        self.assertTrue(
+            any("never reported" in s for s in found), found
+        )
+
+    def test_an_author_who_cannot_judge_the_effect_and_says_so_passes(self) -> None:
+        # The near-miss. A vocabulary refusing this would turn an author who does
+        # not know into an author who has to pick, and the record would then carry
+        # a judgement nobody made.
+        self.assertEqual(violations(EffectNotKnownDeclared), [])
 
 
 class TheConfigurationCheckBites(unittest.TestCase):

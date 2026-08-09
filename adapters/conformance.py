@@ -641,6 +641,25 @@ def departure_violations(name: str, adapter: Any) -> list[str]:
                 f"{where} is {entry.kind!r} and names an admission, which only a "
                 f"{interface.KIND_WITH_ADMISSION} carries"
             )
+
+        # Both directions. A departure describing a run that happened and saying
+        # nothing about the measurement is the shape #37 is about: the list looks
+        # complete, and nothing in it says whether the number moved. A
+        # `not-read-back` entry that states an effect is the opposite error, a
+        # judgement about a value nobody read.
+        if entry.kind == interface.KIND_WITHOUT_EXPECTED_EFFECT:
+            if entry.expected_effect is not None:
+                violations.append(
+                    f"{where} is {interface.KIND_WITHOUT_EXPECTED_EFFECT} and "
+                    f"states the expected effect {entry.expected_effect!r}, which "
+                    f"is a judgement about a quantity the engine never reported"
+                )
+        elif entry.expected_effect not in interface.EXPECTED_EFFECTS:
+            violations.append(
+                f"{where} states the expected effect "
+                f"{entry.expected_effect!r} on the measurement, and the "
+                f"vocabulary is {', '.join(interface.EXPECTED_EFFECTS)}"
+            )
     return sorted(violations)
 
 
