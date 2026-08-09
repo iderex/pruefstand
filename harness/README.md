@@ -42,7 +42,33 @@ Measured on 2026-08-08 at the commit this file landed in:
     git ls-files 'harness/*/test_*.py' | wc -l
     0
 
-No harness exists yet. The set is empty because nothing in the tree needs an
-engine yet, not because harness work was left out: the first adapter is issue
-#34 and the first case that needs one is issue #55. An empty set is why the gate
-reports its engine part as not run rather than as passed.
+The third count has moved. One harness exists, `harness/engine/`, and the two
+above have moved with the rest of the tree:
+
+    python -m unittest discover -s tests 2>&1 | grep -E '^Ran '
+    Ran 195 tests in 6.040s
+
+    git ls-files 'tests/test_*.py' | wc -l
+    10
+
+    git ls-files 'harness/*/test_*.py' | wc -l
+    1
+
+`harness/engine/test_conformance.py` runs the adapter conformance suite against
+every adapter package in the tree, which means importing an engine, which is what
+puts it here. It covers no engine today, because there is no adapter package for
+it to import:
+
+    git ls-files 'adapters/*/__init__.py' | wc -l
+    0
+
+So it is written to fail rather than to pass when it is run against an empty
+tree, and the gate does not run it at all: the engine part derives from the tree
+and reports itself as not run, naming the absent adapter, which is a statement
+about coverage rather than a green over nothing. The first adapter is issue #34
+and the first case that needs one is issue #55.
+
+A harness directory is a package, with an `__init__.py`. That is not decoration:
+`unittest discover -s harness` skips a directory that is not one, silently, and
+the engine part of the gate would then collect nothing and exit on the count
+rather than on a test.
