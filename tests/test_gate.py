@@ -228,5 +228,56 @@ class WhichPartsRunIsDerivedFromTheTree(unittest.TestCase):
         self.assertIsNone(self.named("suite").not_run_because)
 
 
+class TheSuiteFloorTracksTheSuite(unittest.TestCase):
+    """A floor that stops being raised becomes a floor at zero slowly.
+
+    Part of #30. The floor is what stops a run that collected less than the whole
+    suite from reading as a run that collected all of it and found nothing. That
+    only holds while the number sits near the count, and nothing was watching it:
+    it landed at 80 against 84 and was still 80 when the suite passed 300, which
+    would have passed a run that had lost three quarters of itself.
+
+    So the drift is bounded by a check rather than by remembering. What is allowed
+    is a tenth of the count, which is twice the gap the floor landed with. That is
+    room for a whole test file to be removed deliberately without the same commit
+    having to move the floor, and it is not room for the floor to stop tracking.
+    """
+
+    # How far below the count the floor may sit, as a fraction of the count.
+    ALLOWED = 0.10
+
+    def counted(self) -> int:
+        """The tests the gate's own suite part would run, without running them.
+
+        Loaded rather than executed, so this costs an import of modules that are
+        already imported. It is the same discovery the gate's command performs,
+        so a count that disagreed with the run would be a defect in one of them.
+
+        A fresh loader rather than the default one. The default loader is the one
+        the command line configured, so under `-k` it carries that filter and
+        counts the tests the filter selected. This measurement would then report a
+        few dozen, the floor would look far too high, and the failure would be
+        about how the suite was invoked rather than about the floor.
+        """
+        return unittest.TestLoader().discover(str(REPO_ROOT / "tests")).countTestCases()
+
+    def test_the_floor_is_not_far_below_what_the_suite_holds(self) -> None:
+        count = self.counted()
+        lowest = int(count * (1.0 - self.ALLOWED))
+        self.assertGreaterEqual(
+            gate.SUITE_FLOOR,
+            lowest,
+            f"the suite holds {count} tests and SUITE_FLOOR is {gate.SUITE_FLOOR}, "
+            f"which is more than a tenth below it. Raise the floor to near the "
+            f"count and put the count's command in the comment beside it.",
+        )
+
+    def test_the_floor_is_below_what_the_suite_holds(self) -> None:
+        # The other direction, and it is the one that would turn a green tree red
+        # for no reason. A floor at or above the count reds on every deliberate
+        # removal, which is what trains a reader to lower it without thinking.
+        self.assertLess(gate.SUITE_FLOOR, self.counted())
+
+
 if __name__ == "__main__":
     unittest.main()
