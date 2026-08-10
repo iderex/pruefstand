@@ -83,11 +83,11 @@ RECORD_READER_DIRS = ("runner", "report", "metrics")
 # pass as a tree with nothing wrong. Measured at the commit these landed in:
 #
 #     git ls-files 'metrics/*.py' | wc -l
-#     3
+#     4
 #     git ls-files 'runner/*.py' 'report/*.py' | wc -l
 #     0
-METRIC_FILE_FLOOR = 3
-RECORD_READER_FILE_FLOOR = 3
+METRIC_FILE_FLOOR = 4
+RECORD_READER_FILE_FLOOR = 4
 
 WORKFLOW_FLOOR = 5
 ACTION_FLOOR = 10
