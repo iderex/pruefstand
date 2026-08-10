@@ -71,8 +71,19 @@ and the report card keeps them apart for that reason.
 And the honest limit on the implication. An engine whose error falls as the step
 is refined is integrating the right equations imprecisely, which computer time
 fixes; an engine whose error stops falling is integrating something else, which no
-step size fixes. Separating those is #57, and until it lands a poor number here
-does not say which of the two it is.
+step size fixes. What separates those is `metrics/error_source.py`, and the limit
+has moved rather than gone: the estimator exists and has never been given a curve
+from an engine, because the resolution study that produces one is #55 and the
+runner under it is #39. So a poor number here still does not say which of the two
+it is, and the reason is now that nothing has run the separation rather than that
+nothing could.
+
+Two things it will not say even then, and they are the reason that estimator
+carries a third verdict rather than two. A step range too narrow to decide returns
+undecided, which is a statement about the study and not about the engine. And what
+it attributes to the engine is what is left after the run's own rounding and the
+reference's bound are taken out, both of which are declared by whoever ran the
+study, so the verdict is only as good as that declaration.
 
 ## What is not met
 
