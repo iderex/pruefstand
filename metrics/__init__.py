@@ -4,7 +4,10 @@
 chaotic class, and it is written in the form that works from runs alone because
 most engines will not hand out a linearisation. `known_exponents.py` is the small
 set of systems whose exponent is published, which is what says the estimator
-returns the right number rather than a plausible one.
+returns the right number rather than a plausible one. `error_source.py` reads a
+resolution ladder and says whether what is left after this study's own error
+sources are taken out is a discretisation error or a modelling one, or whether
+the range was too narrow to say.
 
 Part of the numerical core, so nothing here imports an adapter or an engine, and
 `tests/test_package_boundaries.py` refuses the import that would let it. An
