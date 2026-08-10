@@ -77,7 +77,7 @@ and this tree already reads TOML:
     tests/test_two_test_sets.py
 
     python -c "import sys, tomllib; print(sys.version.split()[0], tomllib.__spec__.origin)"
-    3.14.6 C:\Users\nils7\AppData\Local\Python\pythoncore-3.14-64\Lib\tomllib\__init__.py
+    3.14.6 <python install>\Lib\tomllib\__init__.py
 
 Measured on the machine this note was written on, at 3.14.6. Not measured at the
 interpreter floor: 3.12 is not installed here.
