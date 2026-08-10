@@ -72,8 +72,8 @@ block those contributors permanently, so it is not in the list below.
 
 ## The list
 
-Five names to require, each with the failure it refuses and the file and job that
-produce the name, and then the sixth name this tree produces, which is
+Seven names to require, each with the failure it refuses and the file and job
+that produce the name, and then the one name this tree produces that is
 deliberately not among them.
 
 `gate`. Refuses a tree whose suite reds, whose gate part could not start, or
@@ -100,7 +100,58 @@ which sets `name: Reject Trojan Source Unicode`.
 low severity or above, over the workflow YAML itself. `zizmor.yml`, job `zizmor`,
 which sets `name: Audit workflows (zizmor)`.
 
-`Scorecard analysis` is the sixth name this tree produces and it is deliberately
+`Deterministic PR-hygiene checks`. Refuses a change that names no issue, whose
+paths fall outside the scope its issues declare with the body naming none of
+them, that brings in a tool, a language or a dependency without the body naming
+the means, that modifies a result record instead of adding one, or that moves a
+published number with no new record arriving beside it. `hygiene.yml`, job `hygiene`, which sets
+`name: Deterministic PR-hygiene checks`. It is the only entry that decides
+anything about the shape of a change rather than about the contents of the tree
+or about one property of a commit, and it prints its own bounds on every run.
+Where no named issue declares a scope, and where one of them declares the whole
+tree, it says the comparison decided nothing in place of passing quietly.
+
+`CodeQL`. Refuses a static analysis finding in the Python this repository is
+written in, over the queries in the `security-and-quality` set. `codeql.yml`,
+job `analyze`, which sets `name: CodeQL`. Its baseline is zero findings, which
+is only cheap while the tree is small, and what keeps the baseline honest is
+not in the workflow: a suppression comment lives in the source, and
+`tests/test_code_scanning.py` refuses one that names no rule or gives no reason.
+It runs on a schedule as well as on every change, because a scanner's rules
+improve without the code changing.
+
+`CodeQL` is produced twice on one commit, and only one of the two is the name
+this list asks for. Read off the head of the change that added the workflow:
+
+    gh api repos/iderex/pruefstand/commits/d3ab61380c08f6b21c28905786695849e590cd9a/check-runs --jq '.check_runs[] | "\(.name)\t\(.app.slug)"' | sort
+    Audit workflows (zizmor)	github-actions
+    CodeQL	github-actions
+    CodeQL	github-advanced-security
+    DCO sign-off	github-actions
+    dependency-review	github-actions
+    Deterministic PR-hygiene checks	github-actions
+    gate	github-actions
+    Reject Trojan Source Unicode	github-actions
+    Reject Trojan Source Unicode	github-actions
+    zizmor	github-advanced-security
+
+The one from `github-actions` is the job, and it is the one being requested. The
+one from `github-advanced-security` is the code scanning check run that appears
+when the analysis uploads, which is the same shape as `zizmor` above and carries
+the same caveat: a fork pull request runs with a read-only token and cannot
+upload, so that check run is absent for a whole class of contributor. The two
+share a literal name, so a ruleset entry cannot tell them apart, and what a
+ruleset does when two check runs carry one name is not answered here and is not
+something this repository's state can be read to answer without turning the rule
+on. It is named because it is the difference between a required name that gates
+and one that blocks an outside contributor permanently.
+
+Two of the requested names are younger than the first check-run listing above,
+which was read off a commit made before `hygiene.yml` and `codeql.yml` existed.
+Both are requested from the files that produce them rather than from a run, and
+the listing in this section is where both have since been observed.
+
+`Scorecard analysis` is the one name this tree produces that is deliberately
 not requested. `scorecard.yml` declares `branch_protection_rule`, `schedule` and
 `push` on the mainline, and no `pull_request`, which is why it is absent from the
 check-run listing above. It is a self-audit that publishes a score, and its job
@@ -108,8 +159,8 @@ carries `if: github.event.repository.default_branch == github.ref_name`, so on a
 pull request there is nothing for a required name to match. Requiring it would be
 requiring a name that never reports.
 
-So the request is five names, and the sixth line of this section is the reason
-the sixth name is not among them.
+So the request is seven names, and the paragraph above is the reason the eighth
+is not among them.
 
 ## None of them has been observed to red
 
@@ -140,23 +191,39 @@ job in this tree. The check-run listing above is that half.
 ## A rename removes a check from the gate
 
 A ruleset stores the required check by its literal name. The name is the job id
-unless the job sets `name:`, and four of the five above set one. Renaming a job,
+unless the job sets `name:`, and every requested name above except
+`dependency-review` comes from a `name:` its job sets. Renaming a job,
 or adding a `name:` to `dependency-review`, changes the check-run name, and the
 required entry then matches nothing while the workflow goes on passing. The
 merge waits on a name nothing produces, or, where the ruleset is later tidied to
 remove the stale entry, passes with one guard fewer than the list says.
 
-Nothing in this tree catches that:
+Two of the seven are caught and five are not:
 
     git grep -l 'DCO sign-off\|Reject Trojan Source Unicode\|Audit workflows' -- tests/ ; echo "exit=$?"
     exit=1
+    git grep -l 'Deterministic PR-hygiene checks' -- tests/
+    tests/test_hygiene.py
+    git grep -l 'CHECK_RUN_NAME = ' -- tests/
+    tests/test_code_scanning.py
 
-No test names any of the strings the ruleset would hold. The check that would
-catch it reads the workflow files, derives the check-run name each job produces,
-and refuses a set that differs from the requested list, which is a pattern over
-the tree and therefore belongs in #92's register rather than in this document.
-It is owed and it does not exist. Until it does, a rename is caught by whoever
-notices the ruleset and the workflow disagreeing.
+`tests/test_hygiene.py` asserts that `hygiene.yml` carries the literal name and
+that this document carries the same string, so renaming that one job reds the
+suite and moving the name in one of the two places without the other reds it as
+well. `tests/test_code_scanning.py` holds `CodeQL` the same way against
+`codeql.yml` and against this document, and it is grepped for by its constant
+rather than by the name, because the name is three characters of ordinary prose
+and a grep for it finds this document, the workflow and every sentence that
+mentions the tool. That is the shape the rest of the list needs and it covers
+two names, because each was written beside the workflow it names rather than
+over the set.
+
+No test names any of the other five strings the ruleset would hold. The check
+that would catch those reads the workflow files, derives the check-run name each
+job produces, and refuses a set that differs from the requested list, which is a
+pattern over the tree and therefore belongs in #92's register rather than in this
+document. It is owed and it does not exist. Until it does, a rename of one of the
+other five is caught by whoever notices the ruleset and the workflow disagreeing.
 
 ## Verified signatures, and what they cost here
 
@@ -195,10 +262,13 @@ history, and finding it afterwards is much worse than finding it now.
 
 ## The mark
 
-PROSE, NOT ENFORCEMENT, whole document. Nothing reads it. The ruleset is not in
-this tree, so no check here can compare what is required against what is asked
-for, and no check here notices when a job is renamed out from under a required
-name. #92 is where the rename half would live and it is not written. Until the
+PROSE, NOT ENFORCEMENT, whole document, with two strings excepted. Nothing reads
+it. The ruleset is not in this tree, so no check here can compare what is
+required against what is asked for. The rename half is refused for exactly two
+of the seven names, by `tests/test_hygiene.py` and `tests/test_code_scanning.py`
+holding their names against the workflows that produce them and against the
+entries above, and it is refused for none of the other five. #92 is
+where the half that covers the set would live and it is not written. Until the
 ruleset carries the list, the five names above are workflows that may red without
 stopping anything, which is what the parity document means when it says the
 guards here are advice.

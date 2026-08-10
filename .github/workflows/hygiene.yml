@@ -1,0 +1,57 @@
+# The deterministic pull request hygiene check (#93). This workflow is a wrapper
+# around `python -m hygiene` and carries no logic of its own, for the same
+# reason gate.yml carries none: two procedures meant to be one procedure drift,
+# and the drift is found by a merge that was green on a laptop and reds here.
+# The rule is refused by tests/test_hygiene.py, which allows this file exactly
+# one shell line and requires it to be the hygiene command.
+#
+# What it decides, and what it cannot, is in the module docstring rather than
+# here, and the run prints its own bounds.
+#
+# The interpreter is set to the floor version fixed in
+# docs/decisions/language-and-toolchain.md rather than to whatever the runner
+# image happens to carry.
+name: hygiene
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, edited]
+
+# Deny by default. The job grants only reading: the checkout, the pull request
+# it is about, and the issues that pull request names.
+permissions: {}
+
+concurrency:
+  group: hygiene-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  hygiene:
+    name: Deterministic PR-hygiene checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      issues: read
+      pull-requests: read
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # Full history so the merge base of the change is reachable. No step
+          # pushes, so do not leave the token in .git/config.
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Set up the interpreter at the floor version
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12"
+
+      - name: Decide what can be decided about this change
+        # The token is handed over as an environment value and is never
+        # interpolated into the shell line, so nothing a contributor can put in
+        # a branch name or a body is evaluated here.
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python -m hygiene
