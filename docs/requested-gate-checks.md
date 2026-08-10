@@ -162,31 +162,58 @@ requiring a name that never reports.
 So the request is seven names, and the paragraph above is the reason the eighth
 is not among them.
 
-## None of them has been observed to red
+## One of them has refused something, and six have not
 
     gh api --paginate "repos/iderex/pruefstand/actions/runs?per_page=100" --jq '.workflow_runs[] | "\(.name)\t\(.conclusion)"' | sort | uniq -c
-         16 DCO	success
-         16 Dependency review	success
-         28 gate	success
-         17 Scorecard supply-chain security	success
-         49 unicode-guard	success
-         33 Workflow Security Analysis	success
+          5 CodeQL	success
+          2 DCO	failure
+         40 DCO	success
+         42 Dependency review	success
+         73 gate	success
+          6 hygiene	success
+         37 Scorecard supply-chain security	success
+        120 unicode-guard	success
+         78 Workflow Security Analysis	success
 
-Every run this repository has ever had concluded success. Not one of the five
-names above has refused anything here, so each is a guard whose bite is argued
-from its source rather than observed from a run, and #27 asks for the opposite.
+That counts workflow runs, and what a ruleset holds is a check-run name. The two
+coincide here because every workflow producing a requested name declares one job,
+which is what the check-run listing above shows: one line per workflow apart from
+the `unicode-guard` duplicate that section explains. Counted by the name a
+ruleset would hold:
 
-This is the one requirement of #27 that a document cannot meet, because it is a
-fact about the repository's history rather than about what is written down. It is
-recorded here as unmet rather than softened, it is written into #27 as the reason
-that issue stays open, and the two spellings that would meet it are a deliberately
-broken change pushed on purpose or a red arriving in the ordinary course of the
-work. The first has a cost this document is not the place to spend: it puts a
-knowingly broken pull request on a public tracker for no reason a reader could
-infer.
+    gh api --paginate "repos/iderex/pruefstand/actions/runs?per_page=100" --jq '.workflow_runs[] | select(.conclusion=="failure") | .id' | while read -r id; do gh api "repos/iderex/pruefstand/actions/runs/$id/jobs" --jq '.jobs[] | select(.conclusion=="failure") | .name'; done | sort | uniq -c
+          2 DCO sign-off
 
-What is separable, and is met, is that all five names exist and are produced by a
-job in this tree. The check-run listing above is that half.
+So `DCO sign-off` has refused twice, and `gate`, `dependency-review`, `Reject
+Trojan Source Unicode`, `Audit workflows (zizmor)`, `Deterministic PR-hygiene
+checks` and `CodeQL` have refused nothing here. Each of those six is a guard
+whose bite is argued from its source rather than observed from a run, and #27
+asks for the opposite.
+
+Neither red was arranged. Both are a branch whose commit carried no
+`Signed-off-by:` trailer, which is the failure `DCO sign-off` is in the list for:
+
+    gh api --paginate "repos/iderex/pruefstand/actions/runs?per_page=100" --jq '.workflow_runs[] | select(.conclusion=="failure") | "\(.head_sha[0:12])\t\(.head_branch)\t\(.created_at)"' | sort
+    00f5d2edb79d	issue-46-order-of-convergence	2026-08-09T16:04:26Z
+    d1b7a83666da	issue-23-refuse-network	2026-08-09T06:04:50Z
+
+Each was repaired by cherry-picking the commit onto a fresh branch with the
+trailer rather than by rewriting the branch, and each original pull request was
+closed with the reason in its body: #139 replaced by #140, and #148 replaced by
+#149.
+
+For the other six this is the one requirement of #27 that a document cannot meet,
+because it is a fact about the repository's history rather than about what is
+written down. It is recorded here as unmet rather than softened, it is written
+into #27 as the reason that issue stays open, and the two spellings that would
+meet it are a deliberately broken change pushed on purpose or a red arriving in
+the ordinary course of the work. The first has a cost this document is not the
+place to spend: it puts a knowingly broken pull request on a public tracker for no
+reason a reader could infer. The second is what produced the two above, and it
+cannot be arranged for a particular name.
+
+What is separable, and is met for the whole list, is that all seven names exist
+and are produced by a job in this tree. The check-run listing above is that half.
 
 ## A rename removes a check from the gate
 
@@ -269,6 +296,6 @@ of the seven names, by `tests/test_hygiene.py` and `tests/test_code_scanning.py`
 holding their names against the workflows that produce them and against the
 entries above, and it is refused for none of the other five. #92 is
 where the half that covers the set would live and it is not written. Until the
-ruleset carries the list, the five names above are workflows that may red without
-stopping anything, which is what the parity document means when it says the
-guards here are advice.
+ruleset carries the list, the seven names above are workflows that may red
+without stopping anything, which is what the parity document means when it says
+the guards here are advice.
