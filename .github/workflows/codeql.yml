@@ -1,0 +1,73 @@
+# Code scanning for the language this repository is written in (#87). The
+# argument for static analysis does not depend on what the code does, so this
+# element of the reference gate is adopted rather than adapted.
+#
+# What it has to find here is narrower than in a service that terminates
+# connections from strangers, and it is not nothing. This tree parses case files
+# that will come from other people, it will read result records that come from
+# other people, it will execute engine code in the same process, and it derives
+# paths from case identifiers. Each of those is a category a scanner finds real
+# findings in.
+#
+# It runs on every change and on a schedule, because a scanner's rules improve
+# without the code changing, and a tree that was clean in March is not thereby
+# clean in August.
+#
+# The check-run name is fixed at `CodeQL` by the job's `name:`, and a ruleset
+# matches a required check by that literal string, so renaming the job removes
+# the check from the gate while this workflow goes on passing.
+# tests/test_code_scanning.py holds the name against this file and against
+# docs/requested-gate-checks.md so the rename reds the suite.
+#
+# The baseline is zero findings, which is only cheap while the tree is small.
+# The suppression rule that keeps it honest is not here, because a suppression
+# lives in the source rather than in the workflow: it is in
+# tests/test_code_scanning.py, and it refuses a suppression that names no rule
+# or gives no reason.
+name: CodeQL
+
+on:
+  pull_request:
+    branches: ["**"]
+  push:
+    branches: [main]
+  schedule:
+    # Weekly. The rules move, the tree does not have to.
+    - cron: "23 4 * * 1"
+
+# Deny by default; the job grants only what the analysis needs.
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  analyze:
+    name: CodeQL
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      # Uploading the analysis into the code-scanning tab.
+      security-events: write
+      contents: read
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # No step pushes, so do not leave the token in .git/config.
+          persist-credentials: false
+
+      - name: Initialise CodeQL
+        uses: github/codeql-action/init@e4fba868fa4b1b91e1fdab776edc8cfbe6e9fb81 # v4.37.3
+        with:
+          languages: python
+          # security-and-quality is wider than the default security-extended
+          # set. The baseline is zero today, so the wider set costs nothing now
+          # and would cost a triage backlog if it were switched on later.
+          queries: security-and-quality
+
+      - name: Analyse
+        uses: github/codeql-action/analyze@e4fba868fa4b1b91e1fdab776edc8cfbe6e9fb81 # v4.37.3
+        with:
+          category: "/language:python"
