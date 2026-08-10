@@ -583,7 +583,10 @@ def _issue_body(repository: str, number: int, token: str | None) -> str | None:
 def collect(environment: Mapping[str, str]) -> Change:
     """The change this run is about, read from the workflow's own environment."""
     event_path = environment.get("GITHUB_EVENT_PATH", "")
-    event = json.loads(open(event_path, encoding="utf-8").read()) if event_path else {}
+    event = {}
+    if event_path:
+        with open(event_path, encoding="utf-8") as handle:
+            event = json.load(handle)
     pull_request = event.get("pull_request") or {}
     base = pull_request.get("base", {}).get("sha", "")
     head = pull_request.get("head", {}).get("sha", "")
