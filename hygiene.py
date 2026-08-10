@@ -37,6 +37,17 @@ comparison that never happened is the failure this project spends most of its
 words on: a run that covered less than everything read as one that covered
 everything and found nothing.
 
+The same holds one step further in, and it was found by running this check on
+its own change rather than reasoned out in advance. Every issue named anywhere
+in the body or the messages contributes its scope, so one incidental number
+widens the union, and an issue declaring `Scope: .` widens it to everything. A
+comparison against the whole tree refuses nothing and distinguishes nothing, so
+it is reported as NOT DECIDED with the issue that declared it, rather than as a
+pass. Narrowing which references contribute a scope would be the other repair
+and it is not made here: reading only a closing reference would drop the change
+that legitimately touches a second issue's paths, which is the case the union
+exists for.
+
 The published-number condition reads a subject that is not fixed yet. Where the
 published artefacts live is #84's, and until it lands, anything under `report/`
 that is not Python and not its README is treated as one. That is a floor chosen
@@ -287,6 +298,31 @@ def changed_paths_inside_scope(change: Change) -> Finding:
         )
 
     allowed = tuple(scope for scopes in declared.values() for scope in scopes)
+    scope_list = "; ".join(
+        f"#{number}: {' '.join(scopes)}" for number, scopes in sorted(declared.items())
+    )
+
+    # A scope of `.` is the whole tree, so comparing against it refuses nothing
+    # and distinguishes nothing. Measured on the first run of this check, where
+    # a body quoting the gate's own output named ten issues, two of which
+    # declare the whole tree, and the comparison passed having admitted every
+    # path for a reason that had nothing to do with the change. Every issue
+    # named anywhere contributes its scope, so one incidental number widens the
+    # union, and a pass on a union like that is not a comparison.
+    whole_tree = sorted(
+        number
+        for number, scopes in declared.items()
+        if any(scope.strip() in (".", "./") for scope in scopes)
+    )
+    if whole_tree:
+        named = ", ".join(f"#{number}" for number in whole_tree)
+        return Finding(
+            INSIDE_SCOPE,
+            NOT_DECIDED,
+            f"{named} declares the whole tree, so the union of scopes admits "
+            f"every path and THE COMPARISON DISTINGUISHES NOTHING ({scope_list})",
+        )
+
     outside = [
         changed.path
         for changed in change.paths
@@ -298,9 +334,6 @@ def changed_paths_inside_scope(change: Change) -> Finding:
     # The distinction is a fact about the body rather than a judgement: the path
     # is written there or it is not.
     silent = sorted(path for path in outside if path not in change.body)
-    scope_list = "; ".join(
-        f"#{number}: {' '.join(scopes)}" for number, scopes in sorted(declared.items())
-    )
     if silent:
         return Finding(
             INSIDE_SCOPE,

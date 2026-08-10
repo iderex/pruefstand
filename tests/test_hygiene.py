@@ -249,6 +249,33 @@ class TheScopeComparison(unittest.TestCase):
         self.assertIn("gate.py", finding.detail)
         self.assertNotIn("hygiene.py", finding.detail.split(":")[-1])
 
+    def test_a_whole_tree_scope_decides_nothing_and_says_so(self) -> None:
+        # Found by running this check on its own pull request. The body quoted
+        # the gate's output, which names #19 and #24, both of which declare the
+        # whole tree, and the comparison passed having admitted every path for a
+        # reason that had nothing to do with the change.
+        change = hygiene.Change(
+            paths=(hygiene.ChangedPath("M", "gate.py"),),
+            messages=("part of #93\n",),
+            body="Closes #93. The formatter part is #19's.",
+            issue_bodies={93: ISSUE_93_BODY, 19: "Scope: .\n"},
+        )
+        finding = hygiene.changed_paths_inside_scope(change)
+        self.assertEqual(finding.outcome, hygiene.NOT_DECIDED)
+        self.assertIn("DISTINGUISHES NOTHING", finding.detail)
+        self.assertIn("#19", finding.detail)
+
+    def test_the_same_change_without_the_whole_tree_scope_is_decided(self) -> None:
+        change = hygiene.Change(
+            paths=(hygiene.ChangedPath("M", "gate.py"),),
+            messages=("part of #93\n",),
+            body="Closes #93. The formatter part is #19's.",
+            issue_bodies={93: ISSUE_93_BODY, 19: "Scope: docs/\n"},
+        )
+        self.assertEqual(
+            hygiene.changed_paths_inside_scope(change).outcome, hygiene.REFUSED
+        )
+
     def test_a_change_naming_no_issue_leaves_the_comparison_undecided(self) -> None:
         change = hygiene.Change(paths=clean().paths)
         self.assertEqual(

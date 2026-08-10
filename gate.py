@@ -67,7 +67,7 @@ UNITTEST_COUNT = re.compile(r"^Ran (?P<count>\d+) tests? in ", re.MULTILINE)
 # message what was removed and why. Measured at the commit this floor landed in:
 #
 #     python -m unittest discover -s tests 2>&1 | grep -E '^Ran '
-#     Ran 527 tests in 18.285s
+#     Ran 529 tests in 26.366s
 #
 # The gap between the floor and the count is deliberate and small. A floor equal
 # to the count reds on every removal including a deliberate one, which trains a

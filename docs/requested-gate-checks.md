@@ -107,9 +107,9 @@ the means, that modifies a result record instead of adding one, or that moves a
 published number with no new record arriving beside it. `hygiene.yml`, job `hygiene`, which sets
 `name: Deterministic PR-hygiene checks`. It is the only entry that decides
 anything about the shape of a change rather than about the contents of the tree
-or about one property of a commit, and it prints its own bounds on every run:
-where no named issue declares a scope, it says the comparison was not made in
-place of passing quietly.
+or about one property of a commit, and it prints its own bounds on every run.
+Where no named issue declares a scope, and where one of them declares the whole
+tree, it says the comparison decided nothing in place of passing quietly.
 
 This name is younger than the check-run listing above, which was read off a
 commit made before `hygiene.yml` existed. It is requested here from the file
