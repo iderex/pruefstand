@@ -120,11 +120,36 @@ not in the workflow: a suppression comment lives in the source, and
 It runs on a schedule as well as on every change, because a scanner's rules
 improve without the code changing.
 
-Two of these names are younger than the check-run listing above, which was read
-off a commit made before `hygiene.yml` and `codeql.yml` existed. Both are
-requested here from the files that produce them rather than from a run, and
-until each has run on a change the listing is where the other five are read from
-and these two are not.
+`CodeQL` is produced twice on one commit, and only one of the two is the name
+this list asks for. Read off the head of the change that added the workflow:
+
+    gh api repos/iderex/pruefstand/commits/d3ab61380c08f6b21c28905786695849e590cd9a/check-runs --jq '.check_runs[] | "\(.name)\t\(.app.slug)"' | sort
+    Audit workflows (zizmor)	github-actions
+    CodeQL	github-actions
+    CodeQL	github-advanced-security
+    DCO sign-off	github-actions
+    dependency-review	github-actions
+    Deterministic PR-hygiene checks	github-actions
+    gate	github-actions
+    Reject Trojan Source Unicode	github-actions
+    Reject Trojan Source Unicode	github-actions
+    zizmor	github-advanced-security
+
+The one from `github-actions` is the job, and it is the one being requested. The
+one from `github-advanced-security` is the code scanning check run that appears
+when the analysis uploads, which is the same shape as `zizmor` above and carries
+the same caveat: a fork pull request runs with a read-only token and cannot
+upload, so that check run is absent for a whole class of contributor. The two
+share a literal name, so a ruleset entry cannot tell them apart, and what a
+ruleset does when two check runs carry one name is not answered here and is not
+something this repository's state can be read to answer without turning the rule
+on. It is named because it is the difference between a required name that gates
+and one that blocks an outside contributor permanently.
+
+Two of the requested names are younger than the first check-run listing above,
+which was read off a commit made before `hygiene.yml` and `codeql.yml` existed.
+Both are requested from the files that produce them rather than from a run, and
+the listing in this section is where both have since been observed.
 
 `Scorecard analysis` is the one name this tree produces that is deliberately
 not requested. `scorecard.yml` declares `branch_protection_rule`, `schedule` and
