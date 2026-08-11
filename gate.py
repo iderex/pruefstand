@@ -67,7 +67,7 @@ UNITTEST_COUNT = re.compile(r"^Ran (?P<count>\d+) tests? in ", re.MULTILINE)
 # message what was removed and why. Measured at the commit this floor landed in:
 #
 #     python -m unittest discover -s tests 2>&1 | grep -E '^Ran '
-#     Ran 584 tests in 25.458s
+#     Ran 628 tests in 30.722s
 #
 # The gap between the floor and the count is deliberate and small. A floor equal
 # to the count reds on every removal including a deliberate one, which trains a
@@ -82,7 +82,7 @@ UNITTEST_COUNT = re.compile(r"^Ran (?P<count>\d+) tests? in ", re.MULTILINE)
 # `TheSuiteFloorTracksTheSuite` in `tests/test_gate.py` now refuses a floor that
 # has fallen more than a tenth behind, so it drifts by a stated amount rather
 # than indefinitely.
-SUITE_FLOOR = 555
+SUITE_FLOOR = 597
 
 
 @dataclass(frozen=True)

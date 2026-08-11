@@ -7,7 +7,11 @@ set of systems whose exponent is published, which is what says the estimator
 returns the right number rather than a plausible one. `error_source.py` reads a
 resolution ladder and says whether what is left after this study's own error
 sources are taken out is a discretisation error or a modelling one, or whether
-the range was too narrow to say. `trajectory.py` is the other direction: it is
+the range was too narrow to say. `drift.py` is the metric for the integrable
+class: the signed change in a first integral, with the rate it walks at and the
+size of the swing it walks through reported separately, because a magnitude and
+an endpoint each throw away a different fault. `trajectory.py` is the other
+direction: it is
 the one metric that is refused rather than offered, and it decides whether a
 case asking for a trajectory comparison may have one at all.
 
