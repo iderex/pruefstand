@@ -7,7 +7,9 @@ set of systems whose exponent is published, which is what says the estimator
 returns the right number rather than a plausible one. `error_source.py` reads a
 resolution ladder and says whether what is left after this study's own error
 sources are taken out is a discretisation error or a modelling one, or whether
-the range was too narrow to say.
+the range was too narrow to say. `trajectory.py` is the other direction: it is
+the one metric that is refused rather than offered, and it decides whether a
+case asking for a trajectory comparison may have one at all.
 
 Part of the numerical core, so nothing here imports an adapter or an engine, and
 `tests/test_package_boundaries.py` refuses the import that would let it. An
