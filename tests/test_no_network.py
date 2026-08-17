@@ -177,9 +177,21 @@ class AnOutboundCall(unittest.TestCase):
             # the socket at all has not shown this half of the refusal, and a
             # silent pass here would read as though it had.
             self.skipTest(f"this machine cannot open an AF_INET6 socket: {error}")
-        with sock:
-            with self.assertRaises(no_network.NetworkRefused):
-                sock.connect(("2001:db8::1", 80, 0, 0))
+        else:
+            # THE SOCKET IS USED IN THE BRANCH THAT MADE IT, and the `else` is
+            # what says so. Before, `with sock:` stood after the try block and
+            # was reachable on paper from the failing path too - correct only
+            # because `skipTest` raises, which is a property of unittest the
+            # reader has to know and a checker cannot see. CodeQL read it as
+            # `sock` possibly used before assignment, the one `error`-severity
+            # finding across the fleet on 2026-08-17.
+            #
+            # Nothing about the behaviour changes. What changes is that the
+            # guarantee is in the code rather than in what somebody remembers
+            # about skipTest.
+            with sock:
+                with self.assertRaises(no_network.NetworkRefused):
+                    sock.connect(("2001:db8::1", 80, 0, 0))
 
 
 class NameResolution(unittest.TestCase):
