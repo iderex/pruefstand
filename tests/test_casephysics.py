@@ -29,7 +29,6 @@ from pathlib import Path
 
 import casefile
 import casephysics
-from casefile import CaseRefused
 from casephysics import (
     INERTIA_TOLERANCE,
     deviatoric_moments,
@@ -264,12 +263,12 @@ class ATensorThatIsNotABody(unittest.TestCase):
         self.assertIn("body.second.inertia", found[0])
 
     def test_refuse_raises_what_the_schema_raises(self) -> None:
-        with self.assertRaises(CaseRefused):
+        with self.assertRaises(casefile.CaseRefused):
             casephysics.refuse(content_with(zz=6.0e-5))
 
     def test_loads_refuses_a_document_that_is_not_a_body(self) -> None:
         text = CLEAN.replace("zz = 4.6e-5", "zz = 6.0e-5")
-        with self.assertRaises(CaseRefused) as refused:
+        with self.assertRaises(casefile.CaseRefused) as refused:
             casephysics.loads(text)
         self.assertIn("exceeds the sum of the other two", str(refused.exception))
 
@@ -278,7 +277,7 @@ class ATensorThatIsNotABody(unittest.TestCase):
             path = Path(directory) / "broken.toml"
             path.write_text(CLEAN.replace("zz = 4.6e-5", "zz = 6.0e-5"),
                             encoding="utf-8")
-            with self.assertRaises(CaseRefused) as refused:
+            with self.assertRaises(casefile.CaseRefused) as refused:
                 casephysics.read(path)
             self.assertIn(str(path), str(refused.exception))
 
@@ -291,7 +290,7 @@ class ATensorThatIsNotABody(unittest.TestCase):
     def test_the_schema_still_runs_first(self) -> None:
         # A file that is not a document at all gets the schema's message and not a
         # physics message about a field that is absent.
-        with self.assertRaises(CaseRefused) as refused:
+        with self.assertRaises(casefile.CaseRefused) as refused:
             casephysics.loads(CLEAN.replace('id = "stone"', 'id = ""'))
         self.assertNotIn("principal moments", str(refused.exception))
 
