@@ -80,7 +80,6 @@ from pathlib import Path
 from typing import Any
 
 import casefile
-from casefile import CaseRefused
 
 # How far a physics condition may be violated before it is a violation, as a
 # fraction of the trace of the tensor it is about.
@@ -223,7 +222,7 @@ def refuse(content: dict[str, Any]) -> None:
     """Raise unless the numbers in a validated case are a rigid body."""
     found = problems(content)
     if found:
-        raise CaseRefused(found)
+        raise casefile.CaseRefused(found)
 
 
 def loads(text: str) -> casefile.Case:
@@ -244,5 +243,5 @@ def read(path: Path) -> casefile.Case:
     case = casefile.read(path)
     found = problems(case.content)
     if found:
-        raise CaseRefused([f"{path}: {problem}" for problem in found])
+        raise casefile.CaseRefused([f"{path}: {problem}" for problem in found])
     return case
