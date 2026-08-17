@@ -32,3 +32,9 @@ See [NOTICE.md](NOTICE.md) for the intended-use notice, and
 [docs/what-this-is-not-for.md](docs/what-this-is-not-for.md) for what a number
 from this suite does and does not support. It is worth reading before quoting
 one: there is no ranking here and no overall winner, by design.
+
+## License
+
+AGPL-3.0, copyright 2026 Nils Lehnen.
+
+The full text is in [LICENSE](LICENSE).
