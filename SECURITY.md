@@ -18,6 +18,10 @@ Use this repository's private vulnerability reporting, on the Security tab, whic
 opens a private advisory only the reporter and the maintainer can read. It is
 enabled:
 
+The form is here, without navigating:
+
+<https://github.com/iderex/pruefstand/security/advisories/new>
+
     gh api repos/iderex/pruefstand/private-vulnerability-reporting
     {"enabled":true}
 
